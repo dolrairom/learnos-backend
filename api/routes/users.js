@@ -51,11 +51,7 @@ router.post('/', (req, res, next) => {
         res.status(500).send('Error: Unable to store user with error: ');
       }
       else{
-        res.status(200).json({
-          message: 'New user created',
-          createdUser: user
-        });
-        console.log('Item inserted');
+        res.status(200).json(true);
         client.close();
       }
     });
