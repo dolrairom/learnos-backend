@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 
 const userRoutes = require('./api/routes/users');
 const levelRoutes = require('./api/routes/levels');
-const languageRoutes = require('./api/routes/languages');
+//const languageRoutes = require('./api/routes/languages');
 const gameRoutes = require('./api/routes/games');
 
 //const mongoose = require('mongoose');
