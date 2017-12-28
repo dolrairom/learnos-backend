@@ -30,6 +30,53 @@ router.post('/:id', (req, res, next) => {
   });
 });
 
+//Return the current level of the user.
+router.get('/:id/:language', (req, res, next) => {
+  mongodb.connect(url, function (err, client) {
+    if (err) throw err;
+    var level;
+    var db = client.db('learnos');
+    if(req.params.language == "c"){
+      db.collection('levels').findOne({
+        _id: req.params.id
+      }, function (err, posts) {
+        if (err) {
+          res.status(500).json(err);
+        }
+        else {
+          level = posts.c;
+        }
+      });
+    }
+    else if(req.params.language == "java"){
+      db.collection('levels').findOne({
+        _id: req.params.id
+      }, function (err, posts) {
+        if (err) {
+          res.status(500).json(err);
+        }
+        else {
+          level = posts.java;
+        }
+      });
+    }
+    else if(req.params.language == "python") {
+      db.collection('levels').findOne({
+        _id: req.params.id
+      }, function (err, posts) {
+        if (err) {
+          res.status(500).json(err);
+        }
+        else {
+          level = posts.python;
+        }
+      });
+    }
+    res.status(200).json(level);
+    client.close();
+  });
+});
+
 
 //Updates the level of the user once it passes it.
 router.patch('/:id/:language/:level', (req, res, next) => {

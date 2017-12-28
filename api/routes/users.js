@@ -7,33 +7,9 @@ var mongodb = require('mongodb').MongoClient;
 var url = "mongodb://admin:admin@ds129386.mlab.com:29386/learnos";
 //var url = 'mongodb://localhost';
 
-/*
-//register a user. coger del body username, email y password
-//Get '/' para obtener todas las peticiones dirigidas a users.js
-router.get('/', (req, res, next) => {
-  var encontrado = true;
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var user {
-      id_: req.body.username,
-      email: req.body.email,
-      password: req.body.password
-    };
-    var db = client.db('learnos');
-    var userFound = db.collection('users').findOne(user);
-    if(userFound == null){
-      encontrado = false;
-      res.json(encontrado);
-    }
-    else {
-      res.json(encontrado);
-    }
-    client.close();
-  });
-});*/
+var bcrypt = require('bcrypt');
 
-//quitar email
-//Boolean si existe o no
+
 router.post('/', (req, res, next) => {
   var user = {
     email: req.body.email,
@@ -43,7 +19,6 @@ router.post('/', (req, res, next) => {
   };
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
-    //var collection = db.collection('users');
     var db = client.db('learnos');
     db.collection('users').insertOne(user, function(err, result) {
       if(err){
@@ -51,6 +26,7 @@ router.post('/', (req, res, next) => {
         res.status(500).send('Error: Unable to store user with error: ');
       }
       else{
+        req.session.name = req.body.username;
         res.status(200).json(true);
         client.close();
       }
@@ -58,7 +34,7 @@ router.post('/', (req, res, next) => {
   });
 });
 
-//Devolver boolean si existe
+
 router.get('/:id/:password', (req, res, next) => {
   var state = "exists";
   var found;
@@ -74,12 +50,25 @@ router.get('/:id/:password', (req, res, next) => {
           state = "noexists";
         }
         else {
-          if((posts._id == req.params.id) && (posts.password == req.params.password)) {
-            state = true;
-          }
-          else {
-            state = false;
-          }
+          bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
+            if (err) {
+              res.status(500).json(err);
+            }
+            else {
+              if((posts._id == req.params.id) && isMatch) {
+                if(posts._id == "admin"){
+                  state = "admin";
+                }
+                else {
+                  state = "true";
+                }
+                req.session.name = req.params.id;
+              }
+              else {
+                state = false;
+              }
+            }
+          });
         }
         res.status(200).json(state);
       }
@@ -88,10 +77,18 @@ router.get('/:id/:password', (req, res, next) => {
   });
 });
 
+
+
 router.patch('/:id', (req, res, next) => {
   res.status(200).json({
     message: 'User updated'
   });
 });
+
+//boolean true si sale
+router.delete('/', (req, res, next) => {
+  req.session.destroy();
+  res.send('user logged out');
+})
 
 module.exports = router;
