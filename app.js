@@ -2,10 +2,11 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const upload = require('express-fileupload');
 
 const userRoutes = require('./api/routes/users');
 const levelRoutes = require('./api/routes/levels');
-//const languageRoutes = require('./api/routes/languages');
+const filesRoutes = require('./api/routes/files');
 const gameRoutes = require('./api/routes/games');
 
 //const mongoose = require('mongoose');
@@ -15,6 +16,7 @@ const gameRoutes = require('./api/routes/games');
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(upload());
 
 
 //Provides access to any client
