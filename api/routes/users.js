@@ -85,10 +85,17 @@ router.patch('/:id', (req, res, next) => {
   });
 });
 
-//boolean true si sale
+
 router.delete('/', (req, res, next) => {
-  req.session.destroy();
-  res.send('user logged out');
+  req.session.destroy(function(err) {
+        if(err){
+            console.log("Session impossible to close due to error");
+            res.json(false);
+        }else{
+            console.log("Session closed");;
+            res.json(true);
+        }
+    });
 })
 
 module.exports = router;
