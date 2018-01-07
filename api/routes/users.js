@@ -50,6 +50,8 @@ router.get('/:id/:password', (req, res, next) => {
           state = "noexists";
         }
         else {
+          console.log(posts.password);
+          console.log(req.params.password);
           bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
             if (err) {
               res.status(500).json(err);
