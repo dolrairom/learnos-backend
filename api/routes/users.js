@@ -92,8 +92,6 @@ router.get('/:id/:password', (req, res, next) => {
           state = "noexists";
         }
         else {
-          console.log(posts.password);
-          console.log(req.params.password);
           bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
             if (err) {
               res.status(500).json(err);
@@ -107,6 +105,10 @@ router.get('/:id/:password', (req, res, next) => {
                   state = "true";
                 }
                 req.session.name = req.params.id;
+              }
+              //he cambiado else por else if (si hay fallo volver a cambiar)
+              else if(!isMatch) {
+                state = false;
               }
               else {
                 state = false;
@@ -123,13 +125,13 @@ router.get('/:id/:password', (req, res, next) => {
 
 
 
-
+/* Future work: change password, mail or username
 router.patch('/:id', (req, res, next) => {
   res.status(200).json({
     message: 'User updated'
   });
 });
-
+*/
 
 router.delete('/', (req, res, next) => {
   req.session.destroy(function(err) {

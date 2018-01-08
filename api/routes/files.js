@@ -23,24 +23,6 @@ router.post('/', (req, res, next) => {
   });
 });
 
-router.post('/', (req, res, next) => {
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var db = client.db('learnos');
-    db.collection('users').insertOne(user, function(err, result) {
-      if(err){
-        console.error('Error: Unable to store user with error: ', err);
-        res.status(500).send('Error: Unable to store user with error: ');
-      }
-      else{
-        req.session.name = req.body.username;
-        res.status(200).json(true);
-        client.close();
-      }
-    });
-  });
-});
-
 
 router.get('/:name', (req, res, next) => {
   mongodb.connect(url, function (err, client) {
