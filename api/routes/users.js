@@ -50,6 +50,47 @@ router.get('/:id/:password', (req, res, next) => {
           state = "noexists";
         }
         else {
+          console.log('password db:'+posts.password);
+          console.log('password peticion:' +req.params.password);
+
+              if(posts._id == req.params.id) {
+                if(posts._id == "admin"){
+                  state = "admin";
+                }
+                else {
+                  state = "true";
+                }
+                req.session.name = req.params.id;
+                console.log('session name:' +req.session.name);
+              }
+              else {
+                state = false;
+              }
+
+
+        }
+        res.status(200).json(state);
+      }
+    });
+    client.close();
+  });
+});
+/*
+router.get('/:id/:password', (req, res, next) => {
+  var state = "exists";
+  var found;
+  mongodb.connect(url, function (err, client) {
+    if (err) throw err;
+    var db = client.db('learnos');
+    var existedUser = db.collection('users').findOne({ _id: req.params.id }, function (err, posts) {
+      if (err) {
+        res.status(500).json(err);
+      }
+      else {
+        if(posts == null){
+          state = "noexists";
+        }
+        else {
           console.log(posts.password);
           console.log(req.params.password);
           bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
@@ -78,6 +119,7 @@ router.get('/:id/:password', (req, res, next) => {
     client.close();
   });
 });
+*/
 
 
 
@@ -91,7 +133,7 @@ router.patch('/:id', (req, res, next) => {
 router.delete('/', (req, res, next) => {
   req.session.destroy(function(err) {
         if(err){
-            console.log("Session impossible to close due to error");
+            console.log("Session impossible to close due to error" +err);
             res.json(false);
         }else{
             console.log("Session closed");;

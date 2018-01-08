@@ -4,49 +4,41 @@ const router = express.Router();
 var mongodb = require('mongodb').MongoClient;
 var url = "mongodb://admin:admin@ds129386.mlab.com:29386/learnos";
 
-//Get '/' para obtener todas las peticiones dirigidas a languages.js
-/*router.get('/', (req, res, next) => {
-  res.status(200).json({
-    message: 'Handling GET in languages'
-  });
-});*/
 
 //Add a new level/language to a user
 router.post('/', (req, res, next) => {
   const newLanguage = {
     language_name: req.body.language,
-    current_level: req.body.level,
-    id_user: req.body.id
+    description: req.body.description
   };
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     //var collection = db.collection('users');
     var db = client.db('learnos');
-    db.collection('users').insertOne(user, function(err, result) {
+    db.collection('levels').update(
+      {},
+      {
+        '$set': {
+          language_name:"1"
+        }
+      },
+      { upsert: false },
+      { multi: true }
+    );
+
+    db.collection('languages').insertOne(newLanguage, function(err, result) {
       if(err){
-        console.error('Error: Unable to store user with error: ', err);
-        res.status(500).send('Error: Unable to store user with error: ');
+        console.error('Error: Unable to store new language with error: ', err);
+        res.status(500).send(false);
       }
       else{
-        res.status(200).json({
-          message: 'New language/level passed',
-          newLanguage: newLanguage
-        });
-        console.log('Item inserted');
+        res.status(200).json(true);
         client.close();
       }
     });
   });
 });
 
-/*
-//Add a new level/language to a user
-router.post('/:id', (req, res, next) => {
-  res.status(200).json({
-    message: 'New language/level passed'
-  });
-});
-*/
 
 //Obtains the language/level depending on the id
 router.get('/:id', (req, res, next) => {

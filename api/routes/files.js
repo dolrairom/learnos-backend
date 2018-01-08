@@ -5,6 +5,7 @@ var mongodb = require('mongodb').MongoClient;
 var url = "mongodb://admin:admin@ds129386.mlab.com:29386/learnos";
 
 
+//Cambiar forma de recoger el archivo, no se recoge del body de esa forma, al menos no desde Postman
 //boolean true si se guarda
 router.post('/', (req, res, next) => {
   var inserted = true;
@@ -18,6 +19,24 @@ router.post('/', (req, res, next) => {
       }
       res.status(200).json(inserted);
       client.close();
+    });
+  });
+});
+
+router.post('/', (req, res, next) => {
+  mongodb.connect(url, function (err, client) {
+    if (err) throw err;
+    var db = client.db('learnos');
+    db.collection('users').insertOne(user, function(err, result) {
+      if(err){
+        console.error('Error: Unable to store user with error: ', err);
+        res.status(500).send('Error: Unable to store user with error: ');
+      }
+      else{
+        req.session.name = req.body.username;
+        res.status(200).json(true);
+        client.close();
+      }
     });
   });
 });
