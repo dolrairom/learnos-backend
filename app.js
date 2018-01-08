@@ -3,11 +3,13 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const upload = require('express-fileupload');
+const session = require('express-session');
 
 const userRoutes = require('./api/routes/users');
 const levelRoutes = require('./api/routes/levels');
 const filesRoutes = require('./api/routes/files');
 const gameRoutes = require('./api/routes/games');
+const languageRoutes = require('./api/routes/languages');
 
 //const mongoose = require('mongoose');
 
@@ -17,6 +19,11 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(upload());
+app.use(session({
+  secret: 'supersecret',
+  resave: false,
+  saveUninitialized: true
+}));
 
 
 //Provides access to any client
@@ -33,7 +40,7 @@ app.use((req, res, next) => {
 //take all the request send to products to the handler
 app.use('/users', userRoutes);
 app.use('/levels', levelRoutes);
-//app.use('/languages', languageRoutes);
+app.use('/languages', languageRoutes);
 app.use('/games', gameRoutes);
 
 //catch all the request that cannot go to users/levels/languages
