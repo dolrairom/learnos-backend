@@ -34,7 +34,7 @@ router.post('/', (req, res, next) => {
   });
 });
 
-
+/* get petition to test session without hashing
 router.get('/:id/:password', (req, res, next) => {
   var state = "exists";
   var found;
@@ -75,7 +75,8 @@ router.get('/:id/:password', (req, res, next) => {
     client.close();
   });
 });
-/*
+*/
+
 router.get('/:id/:password', (req, res, next) => {
   var state = "exists";
   var found;
@@ -119,7 +120,7 @@ router.get('/:id/:password', (req, res, next) => {
     client.close();
   });
 });
-*/
+
 
 
 
