@@ -41,26 +41,43 @@ router.post('/', (req, res, next) => {
 
 
 //Obtains the language/level depending on the id
-router.get('/:id', (req, res, next) => {
-  const id = req.params.id;
-  if(id === 'guay') {
-    res.status(200).json({
-      message: 'You discovered the ID',
-      id: id
-    });
-  }
-  else {
-    res.status(200).json({
-      message: 'You passed the ID'
-    });
-  }
-});
+router.get('/', (req, res, next) => {
+  mongodb.connect(url, function (err, client) {
+    if (err) throw err;
+    var db = client.db('learnos');
+    /*
+    var myCursor = db.collection('languages').find();
+    var myDocument = myCursor.hasNext() ? myCursor.next() : null;
+    if (myDocument) {
+        res.status(200).send('ok');
+        printjson(myDocument.language_name);
+    }
+    */
 
-//Updates a language's level given an id
-router.patch('/:id', (req, res, next) => {
-  res.status(200).json({
-    message: 'Language updated'
+    db.collection('allLanguages').find({}).toArray(function(err, languages) {
+            res.status(200).send(languages);
+            console.log(JSON.stringify(languages, null, 2));
+        });
+
+    client.close();
   });
 });
+
+//Obtains the language/level depending on the id
+router.get('/index', (req, res, next) => {
+  mongodb.connect(url, function (err, client) {
+    if (err) throw err;
+    var db = client.db('learnos');
+
+    db.collection('languages').find({}, { _id: false }).toArray(function(err, languages) {
+            res.status(200).send(languages);
+            console.log(JSON.stringify(languages, null, 2));
+        });
+
+    client.close();
+  });
+});
+
+
 
 module.exports = router;
