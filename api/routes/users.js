@@ -9,14 +9,10 @@ var url = "mongodb://admin:admin@ds129386.mlab.com:29386/learnos";
 
 var bcrypt = require('bcrypt');
 
+var BCRYPT_SALT_ROUNDS = 12;
+
 
 router.post('/', (req, res, next) => {
-  var user = {
-    email: req.body.email,
-    _id: req.body.username,
-    password: req.body.password,
-    starter: "true"
-  };
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
@@ -32,6 +28,15 @@ router.post('/', (req, res, next) => {
             }
             else {
               if(posts == null){ //email is not registered
+                bcrypt.hash(req.body.password, BCRYPT_SALT_ROUNDS)
+                .then(function(hashedPassword) {
+                  var user = {
+                    email: req.body.email,
+                    _id: req.body.username,
+                    password: hashedPassword,
+                    starter: "true"
+                  };
+                });
                 db.collection('users').insertOne(user, function(err, result) {
                   if(err){
                     console.error('Error: Unable to store user with error: ', err);
