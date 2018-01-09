@@ -20,15 +20,34 @@ router.post('/', (req, res, next) => {
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
-    db.collection('users').insertOne(user, function(err, result) {
-      if(err){
-        console.error('Error: Unable to store user with error: ', err);
-        res.status(500).send('Error: Unable to store user with error: ');
+    db.collection('users').findOne({ _id: req.body.username }, function (err, posts) {
+      if (err) {
+        res.status(500).json(err);
       }
-      else{
-        req.session.name = req.body.username;
-        res.status(200).json(true);
-        client.close();
+      else {
+        if(posts == null){ //username is not registered
+          db.collection('users').findOne({ _id: req.body.email }, function (err, posts) {
+            if (err) {
+              res.status(500).json(err);
+            }
+            else {
+              if(posts == null){ //email is not registered
+                db.collection('users').insertOne(user, function(err, result) {
+                  if(err){
+                    console.error('Error: Unable to store user with error: ', err);
+                    res.status(500).send(false);
+                  }
+                  else{
+                    req.session.name = req.body.username;
+                    res.status(200).json(true);
+                    client.close();
+                  }
+                });
+              }
+            }
+          });
+        }
+        res.status(200).json("exists");
       }
     });
   });
@@ -78,8 +97,7 @@ router.get('/:id/:password', (req, res, next) => {
 */
 
 router.get('/:id/:password', (req, res, next) => {
-  var state = "exists";
-  var found;
+  var state = "error somewhere";
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
@@ -88,16 +106,16 @@ router.get('/:id/:password', (req, res, next) => {
         res.status(500).json(err);
       }
       else {
-        if(posts == null){
+        if(posts == null){ //the user doesn't exist
           state = "noexists";
         }
-        else {
+        else { //the user exists so the username is correct
           bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
             if (err) {
               res.status(500).json(err);
             }
-            else {
-              if((posts._id == req.params.id) && isMatch) {
+            else { //no error
+              if((posts._id == req.params.id) && isMatch) { //same username & same password
                 if(posts._id == "admin"){
                   state = "admin";
                 }
@@ -105,10 +123,6 @@ router.get('/:id/:password', (req, res, next) => {
                   state = "true";
                 }
                 req.session.name = req.params.id;
-              }
-              //he cambiado else por else if (si hay fallo volver a cambiar)
-              else if(!isMatch) {
-                state = false;
               }
               else {
                 state = false;
