@@ -13,47 +13,68 @@ var BCRYPT_SALT_ROUNDS = 12;
 
 
 router.post('/', (req, res, next) => {
+  var password = req.body.password;
+  console.log("username:" +req.body.username);
+  console.log("password: " +password);
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
     db.collection('users').findOne({ _id: req.body.username }, function (err, posts) {
+      console.log("checking username");
       if (err) {
         res.status(500).json(err);
       }
       else {
         if(posts == null){ //username is not registered
           db.collection('users').findOne({ _id: req.body.email }, function (err, posts) {
+            console.log("checking email");
             if (err) {
               res.status(500).json(err);
             }
             else {
               if(posts == null){ //email is not registered
-                bcrypt.hash(req.body.password, BCRYPT_SALT_ROUNDS)
-                .then(function(hashedPassword) {
+                console.log("user not registered yet");
+                bcrypt.hash(password, BCRYPT_SALT_ROUNDS).then(function(hashedPassword) {
                   var user = {
                     email: req.body.email,
                     _id: req.body.username,
                     password: hashedPassword,
                     starter: "true"
                   };
-                });
-                db.collection('users').insertOne(user, function(err, result) {
-                  if(err){
-                    console.error('Error: Unable to store user with error: ', err);
-                    res.status(500).send(false);
-                  }
-                  else{
-                    req.session.name = req.body.username;
-                    res.status(200).json(true);
-                    client.close();
-                  }
+                  console.log("hashedPassword:" +hashedPassword);
+                  db.collection('users').insertOne(user, function(err, result) {
+                    if(err){
+                      console.error('Error: Unable to store user with error: ', err);
+                      var state = false;
+                      res.status(500).json(state);
+                      //res.status(500).send(false);
+                    }
+                    else{
+                      console.log("correctly inserted");
+                      var state = true;
+                      console.log("state:" +state);
+                      req.session.name = req.body.username;
+                      //res.status(200).send(true);
+                      res.status(200).json(state);
+                      client.close();
+                    }
+                  });
                 });
               }
+              else {
+                var state = "exists";
+                res.status(200).json(state);
+              }
+
             }
           });
         }
-        res.status(200).json("exists");
+        else {
+          var state = "exists";
+          res.status(200).json(state);
+        }
       }
+      //res.status(200).send(state);
     });
   });
 });
@@ -102,7 +123,9 @@ router.get('/:id/:password', (req, res, next) => {
 */
 
 router.get('/:id/:password', (req, res, next) => {
-  var state = "error somewhere";
+  //var state;
+  console.log("username: " +req.params.id);
+  console.log("password:" +req.params.password);
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
@@ -112,30 +135,41 @@ router.get('/:id/:password', (req, res, next) => {
       }
       else {
         if(posts == null){ //the user doesn't exist
-          state = "noexists";
+          var state = "noexists";
+          res.status(200).json(state);
         }
         else { //the user exists so the username is correct
           bcrypt.compare(req.params.password, posts.password, function (err, isMatch) {
+            console.log("isMatch: " +isMatch);
             if (err) {
+              console.log("error unhashing");
               res.status(500).json(err);
             }
             else { //no error
+              console.log("no error unhashing");
               if((posts._id == req.params.id) && isMatch) { //same username & same password
                 if(posts._id == "admin"){
-                  state = "admin";
+                  var state = "admin";
+                  res.status(200).json(state);
                 }
                 else {
-                  state = "true";
+                  var state = "true";
+                  console.log("state:" +state);
+                  res.status(200).json(state);
+
                 }
                 req.session.name = req.params.id;
+                console.log("session:" +req.session.name);
+
               }
               else {
-                state = false;
+                var state = false;
+                res.status(200).json(state);
               }
             }
           });
         }
-        res.status(200).json(state);
+        //res.status(200).json(state);
       }
     });
     client.close();
