@@ -40,7 +40,7 @@ router.post('/', (req, res, next) => {
 });
 
 
-//Obtains the language/level depending on the id
+//Obtains all the languages availables
 router.get('/', (req, res, next) => {
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
