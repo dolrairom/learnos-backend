@@ -2,12 +2,12 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const upload = require('express-fileupload');
+const fileUpload = require('express-fileupload');
 const session = require('express-session');
 
 const userRoutes = require('./api/routes/users');
 const levelRoutes = require('./api/routes/levels');
-const filesRoutes = require('./api/routes/files');
+const fileRoutes = require('./api/routes/files');
 const gameRoutes = require('./api/routes/games');
 const languageRoutes = require('./api/routes/languages');
 
@@ -18,7 +18,7 @@ const languageRoutes = require('./api/routes/languages');
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(upload());
+app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
 app.use(session({
   secret: 'supersecret',
   resave: false,
@@ -42,6 +42,7 @@ app.use('/users', userRoutes);
 app.use('/levels', levelRoutes);
 app.use('/languages', languageRoutes);
 app.use('/games', gameRoutes);
+app.use('/files', fileRoutes);
 
 //catch all the request that cannot go to users/levels/languages
 app.use((req, res, next) => {
