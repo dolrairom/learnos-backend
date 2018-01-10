@@ -18,12 +18,12 @@ const upload = multer({storage: storage});
 
 
 router.post('/', upload.single('fileUpload'), (req, res, next) => {
-  console.log(req.files);
+  //console.log(req.files);
   //res.status(200).send(req.files);
   mongodb.connect(url, function (err, client) {
     if (err) throw err;
     var db = client.db('learnos');
-    db.collection('files').insertOne(req.body.formData, function(err, result) {
+    db.collection('files').insertOne(req.files, function(err, result) {
       if(err){
         console.error('Error: Unable to store file with error: ', err);
         res.status(200).json(false);
