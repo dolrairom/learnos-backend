@@ -8,8 +8,11 @@ const session = require('express-session');
 const userRoutes = require('./api/routes/users');
 const levelRoutes = require('./api/routes/levels');
 const fileRoutes = require('./api/routes/files');
+const pruebaRoutes = require('./api/routes/prueba_files');
 const gameRoutes = require('./api/routes/games');
 const languageRoutes = require('./api/routes/languages');
+
+const busboyBodyParser = require('busboy-body-parser');
 
 //const mongoose = require('mongoose');
 
@@ -18,12 +21,14 @@ const languageRoutes = require('./api/routes/languages');
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
+//app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
 app.use(session({
   secret: 'supersecret',
   resave: false,
   saveUninitialized: true
 }));
+
+app.use(busboyBodyParser({ limit: '10mb' }));
 
 
 //Provides access to any client
@@ -43,6 +48,7 @@ app.use('/levels', levelRoutes);
 app.use('/languages', languageRoutes);
 app.use('/games', gameRoutes);
 app.use('/files', fileRoutes);
+app.use('/prueba', pruebaRoutes);
 
 //catch all the request that cannot go to users/levels/languages
 app.use((req, res, next) => {
