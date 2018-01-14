@@ -1,106 +1,86 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const fs = require('fs');
+const Binary = require('mongodb').Binary;
 
 var mongodb = require('mongodb').MongoClient;
 var url = "mongodb://admin:admin@ds129386.mlab.com:29386/learnos";
 
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, './uploads/');
-  },
-  filename: function(req, file, cb) {
-    cb(null, file.filename);
-  }
-});
+var mongoose = require('mongoose');
+mongoose.connect("mongodb://admin:admin@ds129386.mlab.com:29386/learnos");
 
-const upload = multer({storage: storage});
+let Grid = require("gridfs-stream");
+let conn = mongoose.connection;
+Grid.mongo = mongoose.mongo;
+let gfs;
 
+conn.once("open", () => {
+    gfs = Grid(conn.db);
 
-router.post('/', upload.single('fileUpload'), (req, res, next) => {
-  //console.log(req.files);
-  //res.status(200).send(req.files);
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var db = client.db('learnos');
-    db.collection('files').insertOne(req.files, function(err, result) {
-      if(err){
-        console.error('Error: Unable to store file with error: ', err);
-        res.status(200).json(false);
-      }
-      else {
-        res.status(200).json(true);
-      }
-    //  res.status(200).json(inserted);
-      client.close();
+    router.get('/:username', (req, res) => {
+      let username = req.params.username;
+        gfs.files.find({
+            aliases: username
+        }).toArray((err, files) => {
+
+            if (files.length === 0) {
+                return res.status(404).send({
+                    message: 'File not found'
+                });
+            }
+            let data = [];
+            let readstream = gfs.createReadStream({
+                filename: files[0].filename
+            });
+
+            readstream.on('data', (chunk) => {
+                data.push(chunk);
+            });
+
+            readstream.on('end', () => {
+                data = Buffer.concat(data);
+                let img = 'data:image/png;base64,' + Buffer(data).toString('base64');
+                res.end(img);
+            });
+
+            readstream.on('error', (err) => {
+              // if theres an error, respond with a status of 500
+              // responds should be sent, otherwise the users will be kept waiting
+              // until Connection Time out
+                res.status(500).send(err);
+                console.log('An error occurred!', err);
+            });
+        });
     });
-  });
-});
-
-
-/*
-//Cambiar forma de recoger el archivo, no se recoge del body de esa forma, al menos no desde Postman
-//boolean true si se guarda
-router.post('/', (req, res, next) => {
-  var inserted = true;
-  console.log("name:" +req.file);
-
-
-  res.status(200).send(req.files);
-
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var db = client.db('learnos');
-    db.collection('files').insertOne(req.file, function(err, result) {
-      if(err){
-        console.error('Error: Unable to store file with error: ', err);
-        inserted = false;
-      }
-      res.status(200).json(inserted);
-      client.close();
-    });
-  });
-});
-*/
-/*
-router.get('/:name', (req, res, next) => {
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var db = client.db('learnos');
-    var existedUser = db.collection('files').findOne({ filename: req.params.name }, function (err, posts) {
-      if (err) {
-        res.status(500).json(err);
-      }
-      else {
-        if(posts == null){
-          console.log('File not found');
-        }
-        else {
-          console.log('file found');
-        }
-        res.status(200).json(posts);
-      }
-    });
-    client.close();
-  });
-});
-*/
-
-//Obtains all the languages availables
-router.get('/', (req, res, next) => {
-  mongodb.connect(url, function (err, client) {
-    if (err) throw err;
-    var db = client.db('learnos');
-
-    db.collection('files').find({}).toArray(function(err, files) {
-            res.status(200).send(files);
-            console.log(JSON.stringify(files, null, 2));
+    router.post('/:username', (req, res) => {
+        var username = req.params.username;
+        let part = req.files.file;
+        let writeStream = gfs.createWriteStream({
+            filename: 'img_' + part.name,
+            mode: 'w',
+            aliases: username,
+            content_type: part.mimetype
         });
 
-    client.close();
-  });
-});
 
+        writeStream.on('close', (file) => {
+          // checking for file
+          if(!file) {
+            res.status(400).send('No file received');
+          }
+            return res.status(200).send({
+                message: 'Success',
+                file: file
+            });
+        });
+        // using callbacks is important !
+        // writeStream should end the operation once all data is written to the DB
+        writeStream.write(part.data, () => {
+          writeStream.end();
+        });
+    });
+});
 
 
 
