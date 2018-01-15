@@ -54,6 +54,40 @@ conn.once("open", () => {
         });
     });
     router.post('/:username', (req, res) => {
+        mongodb.connect(url, function (err, client) {
+          if (err) throw err;
+          var db = client.db('learnos');
+          db.collection('fs.files').findOne({ aliases: req.params.username }, function (err, posts) {
+            if (err) {
+              res.status(500).json(err);
+            }
+            else {
+              if(posts != null){ //an old image exists
+                /*console.log("deleting image");
+                db.collection('fs.files').remove({
+                  aliases: req.params.username
+                })*/
+                db.collection('fs.files').update(
+                  { aliases: req.params.username },
+                  {
+                    $set:{
+                      aliases: "deprecated"
+                    }
+                  },
+                  { upsert: true }
+                );
+                console.log("deleting image");
+                db.collection('fs.files').remove({
+                  aliases: "deprecated"
+                });
+              }
+            }
+          })
+          /*
+          db.collection('fs.files').remove({ aliases: req.params.username, uploadDate: {$lt : isodate }});
+          */
+        });
+
         var username = req.params.username;
         let part = req.files.file;
         let writeStream = gfs.createWriteStream({
@@ -69,14 +103,17 @@ conn.once("open", () => {
           if(!file) {
             res.status(400).send('No file received');
           }
+
             return res.status(200).send({
                 message: 'Success',
                 file: file
             });
+            client.close();
         });
         // using callbacks is important !
         // writeStream should end the operation once all data is written to the DB
         writeStream.write(part.data, () => {
+          console.log("storing new image");
           writeStream.end();
         });
     });
