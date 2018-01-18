@@ -1,5 +1,5 @@
 # LearnOs
-This project was created for the course Design of Dynamic Web Systems at Luleå University of Technology
+This project was created for the course Design of Dynamic Web Systems at Luleå University of Technology. The application is deployed at https://learnosdinamic.herokuapp.com/
 
 ### General vision
 Programming is more than just writing code. There are a ton of different programming languages out there, all aiming to accomplish one task: to make things for the computer. Nowadays programming has awakened a big interest and a lot of people are wondering how to do it. LearnOs is a great tool to learn how to program in an interactive and easy way
